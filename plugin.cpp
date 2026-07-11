@@ -392,6 +392,31 @@ void SetRaceDefaultVoiceType(RE::StaticFunctionTag*, RE::Actor* actor, RE::BGSVo
     }   
 }
 
+// Stops/fades out the voice line currently playing on the actor.
+// fadeMs = 0 stops immediately; > 0 fades out over that many milliseconds.
+// Returns true if a playing sound handle was stopped.
+bool StopVoiceLine(RE::StaticFunctionTag*, RE::Actor* actor, int fadeMs) {
+    bool stoppedAny = false;
+    try {
+        if (!actor) return false;
+        RE::AIProcess* process = actor->GetActorRuntimeData().currentProcess;
+        if (!process || !process->high) return false;
+
+        if (fadeMs < 0) fadeMs = 0;
+        if (fadeMs > 0xFFFF) fadeMs = 0xFFFF;
+        std::uint16_t fadeTime = static_cast<std::uint16_t>(fadeMs);
+
+        for (RE::BSSoundHandle& handle : process->high->soundHandles) {
+            if (!handle.IsValid()) continue;
+            bool wasPlaying = handle.state.get() == RE::BSSoundHandle::AssumedState::kPlaying;
+            bool accepted = fadeTime > 0 ? handle.FadeOutAndRelease(fadeTime) : handle.Stop();
+            if (wasPlaying && accepted) stoppedAny = true;
+        }
+    } catch (...) {
+    }
+    return stoppedAny;
+}
+
 //  Returns true, if the container has @key: value pair
 bool hasKeyRelay(RE::StaticFunctionTag*, int object, std::string key) { return hasKey(object, key); };
 
@@ -430,6 +455,7 @@ bool Bind(RE::BSScript::IVirtualMachine* vm) {
     vm->RegisterFunction("RenameScreenshot", className, RenameScreenshot);
     vm->RegisterFunction("GetRaceDefaultVoiceType", className, GetRaceDefaultVoiceType);
     vm->RegisterFunction("SetRaceDefaultVoiceType", className, SetRaceDefaultVoiceType);
+    vm->RegisterFunction("StopVoiceLine", className, StopVoiceLine);
 
     vm->RegisterFunction("hasKey", className, hasKeyRelay);
     return true;

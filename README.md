@@ -74,5 +74,16 @@ endEvent
 
 ```
 
+Interrupt the voice line an actor is currently speaking (e.g. a Mantella LLM line)
+```Papyrus
+function InterruptNpc(Actor akSpeaker)
+    ;fade the current voice line out over the default 150 ms (natural-sounding)
+    SKSE_HTTP.StopVoiceLine(akSpeaker)
+
+    ;or hard cut the voice line immediately by passing a fade time of 0
+    SKSE_HTTP.StopVoiceLine(akSpeaker, 0)
+endFunction
+```
+
 Based on https://github.com/SkyrimScripting/SKSE_Templates Many thanks!
 
