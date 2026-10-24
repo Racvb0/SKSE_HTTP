@@ -6,7 +6,12 @@ on:
 
 jobs:
   build:
-    runs-on: windows-2022
+    # windows-latest trae MSVC 14.51 (19.51.x): el mismo juego de herramientas con
+    # que se construyó CommunityShaders y el bundle precompilado del SDK. Mezclar
+    # 14.44/14.51 en un mismo proceso es un escenario de corrupción de memoria
+    # (advertencia del propio Prebuilt.cmake del SDK) y sospechoso del crash al
+    # arranque con CommunityShaders (crash-2026-10-23-21-53-54).
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
         with:
