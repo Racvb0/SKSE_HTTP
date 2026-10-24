@@ -38,6 +38,10 @@ jobs:
           VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
         run: |
           New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          # Forzar SDK por fuente: el bundle precompilado se enlazó contra otra
+          # versión de fmt (su símbolo detail::allocate ya no existe en fmt.lib →
+          # LNK2001). Sin GITHUB_ACTIONS en el entorno, Prebuilt.cmake cae a fuente.
+          Remove-Item Env:GITHUB_ACTIONS -ErrorAction SilentlyContinue
           $vcpkg = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { $env:VCPKG_INSTALLATION_ROOT }
           Write-Host "Usando vcpkg en: $vcpkg"
           cmake -S . -B build -G Ninja `
