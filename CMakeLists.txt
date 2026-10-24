@@ -58,7 +58,10 @@ endif()
 ## Configure target DLL
 ########################################################################################################################
 
-find_package(CommonLibSSE CONFIG REQUIRED)
+# CommonLibSSE-NG se consume como submódulo (el registro vcpkg colorglass está
+# muerto; el SDK vivo es alandtse/CommonLibSSE-NG rama ng). add_subdirectory
+# define CommonLibSSE::CommonLibSSE y add_commonlibsse_plugin().
+add_subdirectory(lib/commonlibsse-ng)
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${SOURCES}) # <--- specifies plugin.cpp
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")

@@ -1,0 +1,56 @@
+name: Build SKSE_HTTP
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Instalar Ninja
+        run: choco install ninja -y
+
+      - name: Caché binaria de vcpkg
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}\vcpkg-binary-cache
+          key: vcpkg-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-
+
+      - name: Configurar
+        shell: pwsh
+        env:
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
+        run: |
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE | Out-Null
+          $vcpkg = if ($env:VCPKG_ROOT) { $env:VCPKG_ROOT } else { $env:VCPKG_INSTALLATION_ROOT }
+          Write-Host "Usando vcpkg en: $vcpkg"
+          cmake -S . -B build -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_TOOLCHAIN_FILE="$vcpkg/scripts/buildsystems/vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows-static-md `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL `
+            -DBUILD_TESTS=OFF
+
+      - name: Compilar
+        shell: pwsh
+        env:
+          VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}\vcpkg-binary-cache
+        run: cmake --build build --parallel
+
+      - name: Subir artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: SKSE_HTTP
+          path: build/SKSE_HTTP.dll
+          if-no-files-found: error
