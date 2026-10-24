@@ -63,6 +63,11 @@ endif()
 # define CommonLibSSE::CommonLibSSE y add_commonlibsse_plugin().
 add_subdirectory(lib/commonlibsse-ng)
 
+# El SDK solo incluye su ayudante add_commonlibsse_plugin() en la rama del
+# bundle precompilado; al caer a compilación por fuente hay que incluirlo a
+# mano (funciona en ambas ramas).
+include(lib/commonlibsse-ng/cmake/CommonLibSSE.cmake)
+
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${SOURCES}) # <--- specifies plugin.cpp
 add_library("${PROJECT_NAME}::${PROJECT_NAME}" ALIAS "${PROJECT_NAME}")
 # target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23) # <--- use C++23 standard
