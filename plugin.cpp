@@ -340,7 +340,7 @@ void RenameScreenshot(RE::StaticFunctionTag*, std::string newname) {
     char exe_path[_MAX_PATH];
 
     if (ssIndex != nullptr) {
-        int SSidx = ssIndex->GetUInt() - 1;
+        int SSidx = ssIndex->GetUnsignedInteger() - 1;
 
         GetModuleFileNameA(NULL, exe_path, _MAX_PATH);			// Skyrim exe
         std::filesystem::path app_path(exe_path);
@@ -348,9 +348,12 @@ void RenameScreenshot(RE::StaticFunctionTag*, std::string newname) {
 
         std::filesystem::path src_path(base_path / std::format("ScreenShot{:d}.png", SSidx));
         std::filesystem::path dst_path(base_path / newname);
-        DeleteFile(dst_path.c_str());
-
-        MoveFile(src_path.c_str(), dst_path.c_str());
+        // std::filesystem en vez de DeleteFile/MoveFile: path::c_str() es wchar_t
+        // y las variantes A/W de Win32 rompen la compilación según el juego de
+        // caracteres. Se conserva la semántica original de ignorar fallos.
+        std::error_code ec;
+        std::filesystem::remove(dst_path, ec);
+        std::filesystem::rename(src_path, dst_path, ec);
         }
     }
 
